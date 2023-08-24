@@ -1,2 +1,2 @@
 # sparkenv
-CLI Tool for downloading and switching Apache Spark versions
+CLI Tool for downloading and switching Apache Spark versions.
