@@ -2,9 +2,19 @@ use clap::Parser;
 
 mod cli;
 mod spark_downloader;
+mod app_config;
 
 #[tokio::main]
 async fn main() {
+    println!("aksdkløds");
+    let mut app_config = app_config::app_config::AppConfig::init();
+    dbg!(&app_config);
+    app_config.add_spark_innstallation();
+
+    dbg!(app_config);
+    
+
+
     let cli = cli::Cli::parse();
 
     match &cli.command {
