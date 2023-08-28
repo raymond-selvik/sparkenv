@@ -12,45 +12,32 @@ use serde_json::from_str;
 #[derive(Serialize, Deserialize, Debug)]
 pub struct AppConfig {
     sparkenv_path: PathBuf,
-    spark_installations: HashMap<String, SparkInstallation>,
+    spark_installations: HashMap<String, PathBuf>,
     active_installation: Option<String>
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-struct SparkInstallation {
-    version: String,
-    path: PathBuf
-}
+
 
 impl AppConfig {
-    pub fn init() -> Self{
-        let Some(base_dir) = BaseDirs::new() else {
-            panic!("Could not find base dir")
-        };
 
-        let sparkenv_path = base_dir.home_dir().join(".sparkenv");
+    pub fn add_spark_version(&mut self, version: &str) {
+        let versions_path = get_sparkenv_path().join("versions");
 
-        if !Path::exists(&sparkenv_path) {
-            println!("Could not find exisitng configuration. Creating new one");
-            create_new_configuration(sparkenv_path)
-        }
-        else {
-            println!("Found existing configuration");
-            open_configuration(sparkenv_path)
-        }
-        
-    }
-
-    pub fn add_spark_innstallation(&mut self) {
-        let spark_inst = SparkInstallation{
-            version: "3.2".to_owned(), 
-            path: Path::new("test").to_owned()
-        };
-
-        self.spark_installations.insert("spark3.2".to_owned(), spark_inst);
+        self.spark_installations.insert(version.to_owned(), versions_path.join(version));
         self.update_config_file();
-
     }
+
+    pub fn get_installed_spark_versions(&self) -> Vec<String> {
+
+        let mut versions: Vec<String>  = self.spark_installations.clone().into_iter()
+            .map(|(version, path)| version)
+            .collect();
+
+        versions.sort();
+
+        return versions;
+    }
+
 
     fn update_config_file(&self) {
         let f = OpenOptions::new()
@@ -62,7 +49,10 @@ impl AppConfig {
 
 }
 
-fn create_new_configuration(sparkenv_path: PathBuf) -> AppConfig {
+
+
+pub fn create_new_configuration() -> AppConfig {
+    let sparkenv_path = get_sparkenv_path();
     fs::create_dir(&sparkenv_path).unwrap();
 
     let f = OpenOptions::new()
@@ -82,12 +72,29 @@ fn create_new_configuration(sparkenv_path: PathBuf) -> AppConfig {
     return config
 }
 
-fn open_configuration(sparkenv_path: PathBuf) -> AppConfig {
+pub fn open_configuration() -> Option<AppConfig> {
+    let sparkenv_path = get_sparkenv_path();
+    if !Path::exists(&sparkenv_path) {
+        return None;
+    }
+
+
     let f = File::open(sparkenv_path.join("config.json")).unwrap();
 
     let config: AppConfig = serde_json::from_reader(f).unwrap();
 
-    return config;
+    return Some(config);
+}
+
+fn get_sparkenv_path() -> PathBuf {
+    let Some(base_dir) = BaseDirs::new() else {
+        panic!("Could not find base dir")
+    };
+
+    let sparkenv_path = base_dir.home_dir().join(".sparkenv");
+
+    return sparkenv_path;
+
 }
 
 
