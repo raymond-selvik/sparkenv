@@ -1,3 +1,5 @@
+use std::io;
+
 use clap::Parser;
 
 mod cli;
@@ -6,8 +8,7 @@ mod app_config;
 
 use app_config::app_config::*;
 
-#[tokio::main]
-async fn main() {
+fn main() {
 
     let mut app_config = match open_configuration() {
         Some(x) => x,
@@ -18,7 +19,7 @@ async fn main() {
     };
 
 
-    dbg!(&app_config);
+    /*dbg!(&app_config);
     app_config.add_spark_version("3.1");
     app_config.add_spark_version("3.2");
     app_config.add_spark_version("3.3");
@@ -26,23 +27,43 @@ async fn main() {
     dbg!(&app_config);
 
     let versions = app_config.get_installed_spark_versions();
+    spark_downloader::get_versions();
+    spark_downloader::get_version_option("spark-3.4.0");
+    
+    //spark_downloader::download_version("spark-3.3.3");
 
-
-    dbg!(versions);
+    dbg!(versions);*/
     
 
 
-    /*let cli = cli::Cli::parse();
+    let cli = cli::Cli::parse();
 
     match &cli.command {
         cli::Commands::Versions =>  {
             println!("List versions")
         },         
         cli::Commands::Install(args) =>  {
-            println!("Install spark version {:?}", args)
+            println!("Install spark version {:?}", args.version);
+            let options = spark_downloader::get_version_option(&args.version);
+
+            for (count, v) in options.iter().enumerate() {
+                println!("{} \t {}", count, v);
+            }
+
+            println!("choose option");
+            let mut input = String::new();
+            io::stdin().read_line(&mut input).unwrap();
+
+            let trimmed = input.trim();
+            let option: usize = trimmed.parse().unwrap();
+
+            println!("You chosed {}",options[option]);
+
+
+
         }
         cli::Commands::List => {
-            spark_downloader::get_versions().await;
+            spark_downloader::get_versions();
         },
-    }*/
+    }
 }

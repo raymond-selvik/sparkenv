@@ -23,5 +23,5 @@ pub enum Commands {
 
 #[derive(Args, Debug)]
 pub struct InstallArg {
-    version: String
+    pub version: String
 }
