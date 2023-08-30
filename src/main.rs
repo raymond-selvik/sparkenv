@@ -5,6 +5,7 @@ use clap::Parser;
 mod cli;
 mod spark_downloader;
 mod app_config;
+mod file_utils;
 
 use app_config::app_config::*;
 
@@ -58,6 +59,8 @@ fn main() {
             let option: usize = trimmed.parse().unwrap();
 
             println!("You chosed {}",options[option]);
+
+            spark_downloader::download_version(&args.version,&options[option]);
 
 
 

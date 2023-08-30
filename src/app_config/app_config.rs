@@ -86,7 +86,7 @@ pub fn open_configuration() -> Option<AppConfig> {
     return Some(config);
 }
 
-fn get_sparkenv_path() -> PathBuf {
+pub fn get_sparkenv_path() -> PathBuf {
     let Some(base_dir) = BaseDirs::new() else {
         panic!("Could not find base dir")
     };
