@@ -7,7 +7,7 @@ mod spark_downloader;
 mod app_config;
 mod file_utils;
 
-use app_config::app_config::*;
+use app_config::*;
 
 fn main() {
 
@@ -44,6 +44,12 @@ fn main() {
             println!("List versions")
         },         
         cli::Commands::Install(args) =>  {
+            if app_config.is_installed(&args.version){
+                println!("{} is already installed", &args.version);
+                return
+            }
+
+
             println!("Install spark version {:?}", args.version);
             let options = spark_downloader::get_version_option(&args.version);
 

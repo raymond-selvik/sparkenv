@@ -1,13 +1,11 @@
 use std::collections::HashMap;
-use std::hash::Hash;
 use std::path::{Path, PathBuf};
 use std::fs::{self, File, OpenOptions};
-use std::ptr::null;
+use std::error::Error;
+
 
 use directories::BaseDirs;
-use serde::ser::SerializeTupleVariant;
 use serde::{Serialize, Deserialize};
-use serde_json::from_str;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct AppConfig {
@@ -38,6 +36,10 @@ impl AppConfig {
         return versions;
     }
 
+    pub fn is_installed(&self, version: &str) -> bool {
+        self.spark_installations.contains_key(version)
+    }
+
 
     fn update_config_file(&self) {
         let f = OpenOptions::new()
@@ -51,7 +53,27 @@ impl AppConfig {
 
 
 
-pub fn create_new_configuration() -> AppConfig {
+pub fn get_or_create_configuration() -> Result<AppConfig, Box<dyn Error>> {
+    let sparkenv_path = get_sparkenv_path();
+    if !Path::exists(&sparkenv_path) {
+        fs::create_dir(&sparkenv_path)?;
+    }
+
+    let config_file_path = sparkenv_path.join("config.json");
+    let app_config =  match File::open(config_file_path) {
+        Ok(f) => {
+            serde_json::from_reader(f)
+        },
+        Err(_) => {
+            Ok(create_config_file())
+        },
+
+    };
+
+    Ok(app_config)
+}
+
+pub fn create_config_file() -> AppConfig {
     let sparkenv_path = get_sparkenv_path();
     fs::create_dir(&sparkenv_path).unwrap();
 
@@ -72,19 +94,7 @@ pub fn create_new_configuration() -> AppConfig {
     return config
 }
 
-pub fn open_configuration() -> Option<AppConfig> {
-    let sparkenv_path = get_sparkenv_path();
-    if !Path::exists(&sparkenv_path) {
-        return None;
-    }
 
-
-    let f = File::open(sparkenv_path.join("config.json")).unwrap();
-
-    let config: AppConfig = serde_json::from_reader(f).unwrap();
-
-    return Some(config);
-}
 
 pub fn get_sparkenv_path() -> PathBuf {
     let Some(base_dir) = BaseDirs::new() else {
